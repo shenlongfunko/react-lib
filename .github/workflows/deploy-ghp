@@ -1,21 +1,42 @@
-name: Build and Publish Storybook to GitHub Pages
+name: Build and Deploy Storybook to GitHub Pages
 
 on:
   push:
     branches:
-      - "main"
+      - "main"  # Change to the branch you wish to deploy from
 
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.build-publish.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - id: build-publish
-        uses: bitovi/github-actions-storybook-to-github-pages@v1.0.0
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.12.1'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Deploy to GitHub Pages
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git remote add gh-pages https://github.com/${{ github.repository }}.git
+          git fetch gh-pages
+          git checkout -b gh-pages
+          rm -rf *
+          cp -r ../storybook-static/* .
+          git add .
+          git commit -m "Deploy Storybook to GitHub Pages"
+          git push --force gh-pages gh-pages:gh-pages
