@@ -1,38 +1,21 @@
-name: Build and Deploy Storybook
+name: Build and Publish Storybook to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the main branch
+      - "main"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.build-publish.outputs.page_url }}
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.12.1'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Storybook
-        run: npm run build-storybook
-
-      - name: Move Storybook to /docs
-        run: |
-          rm -rf ./docs
-          mv ./storybook-static ./docs
-
-      - name: Commit and Push if Docs Updated
-        run: |
-          git config --local user.name "GitHub Actions"
-          git config --local user.email "actions@github.com"
-          git add .
-          git commit -m "Update Storybook docs" || echo "No changes to commit"
-          git push origin main
+      - id: build-publish
+        uses: bitovi/github-actions-storybook-to-github-pages@v1.0.0
